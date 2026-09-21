@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "launchId": "76e03efb-fd31-47ed-a254-8eedf1bacf07",
+  "chainId": 11155111,
+  "sourceCommit": "891f2577e0a8ea85f51b518eec3de468d143da62",
+  "attestationHash": "822e5983961d3309ae1ed795359daa542902d57c88f29c259e32090aa1abb5ba",
+  "contracts": [
+    {
+      "name": "Quorum",
+      "address": "0x337583b9cb98e04288aac10046156dde0715f4ad",
+      "abiHash": "4889e980d7678bd8ebbed1157203e783c309233d295c4c7505e21b3d17fb403a",
+      "abiPath": "abi/Quorum.json"
+    },
+    {
+      "name": "CommitRevealVote",
+      "address": "0x4c9975f83e568f5c200cbcabf5339038095e9072",
+      "abiHash": "2ff7963756b7baa365429367ec33e728f10fb8f0e63bc61dcd76ffb4451d0be5",
+      "abiPath": "abi/CommitRevealVote.json"
+    }
+  ],
+  "assets": []
+}

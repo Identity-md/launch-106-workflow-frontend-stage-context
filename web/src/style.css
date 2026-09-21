@@ -1,0 +1,292 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #173a32;
+  background: #f5f5ed;
+  font-synthesis: none;
+  line-height: 1.5;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 6%;
+  border-bottom: 1px solid #d6ddd0;
+}
+.brand {
+  font-size: 28px;
+  letter-spacing: -1px;
+  font-weight: 700;
+  text-decoration: none;
+  color: inherit;
+}
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.network {
+  font-size: 12px;
+  color: #4c6651;
+}
+main {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 35px;
+}
+.hero {
+  padding: 70px 0 40px;
+  max-width: 850px;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #64825d;
+}
+h1 {
+  font-size: clamp(48px, 7vw, 86px);
+  line-height: 1.03;
+  letter-spacing: -4px;
+  margin: 25px 0;
+}
+h1 em {
+  font-family: Georgia, serif;
+  font-weight: 400;
+  color: #6b8762;
+}
+h2 {
+  font-size: 25px;
+  letter-spacing: -0.8px;
+  margin: 8px 0 16px;
+}
+h3 {
+  font-size: 17px;
+}
+.hero > p:not(.eyebrow) {
+  max-width: 520px;
+  color: #647467;
+  font-size: 17px;
+}
+.steps {
+  display: flex;
+  gap: 36px;
+  margin-top: 35px;
+  color: #7b8c74;
+  font-size: 12px;
+}
+.steps b {
+  margin-left: 10px;
+  color: #234b3f;
+}
+.notice {
+  padding: 15px 20px;
+  border: 1px solid #bdcdb2;
+  border-radius: 10px;
+  background: #e8efde;
+  overflow-wrap: anywhere;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 30px 0;
+  border-block: 1px solid #d6ddd0;
+  padding: 25px 0;
+  gap: 20px;
+}
+small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #72816b;
+}
+strong {
+  display: block;
+  font-size: 25px;
+  overflow-wrap: anywhere;
+}
+strong small {
+  display: inline;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 25px;
+}
+.card {
+  background: #fff;
+  border: 1px solid #dfe4d7;
+  padding: 28px;
+  border-radius: 16px;
+  margin-bottom: 25px;
+  min-width: 0;
+}
+.cardhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.pill {
+  background: #e9f3db;
+  border-radius: 30px;
+  padding: 5px 12px;
+  font-size: 12px;
+}
+.muted {
+  color: #748071;
+  font-size: 13px;
+}
+.hash {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+code {
+  font-size: 11px;
+}
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 18px 0 10px;
+}
+input,
+select,
+textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 7px;
+  background: #f8f9f4;
+  border: 1px solid #dce2d4;
+  border-radius: 7px;
+  color: #173a32;
+  font: inherit;
+  min-width: 0;
+}
+textarea {
+  min-height: 100px;
+}
+button {
+  background: #1c4437;
+  color: #f4f8ee;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 12px 17px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 5px 0;
+}
+button:hover:enabled {
+  background: #366348;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.quiet {
+  background: transparent;
+  color: #294d3d;
+  border-color: #c9d7bf;
+}
+.quiet:hover:enabled {
+  background: #e9efdf;
+}
+a {
+  color: #3f6c35;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #8eae54;
+  outline-offset: 3px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid #e5e9df;
+  margin: 28px 0;
+}
+.tallies {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #f2f6ec;
+  padding: 18px;
+  border-radius: 8px;
+}
+.tallies strong {
+  font-size: 20px;
+}
+details {
+  margin: 15px 0;
+}
+summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.subtle {
+  background: #edf1e5;
+}
+footer {
+  border-top: 1px solid #d6ddd0;
+  padding: 30px 0 50px;
+  font-size: 12px;
+}
+footer a {
+  display: block;
+  margin: 10px 0;
+}
+@media (max-width: 700px) {
+  header {
+    padding: 18px 20px;
+  }
+  .network {
+    display: none;
+  }
+  .wallet {
+    gap: 5px;
+  }
+  .wallet button {
+    padding: 9px;
+    font-size: 11px;
+  }
+  main {
+    padding: 0 18px;
+  }
+  .hero {
+    padding-top: 40px;
+  }
+  h1 {
+    letter-spacing: -2px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 20px;
+  }
+  .stats {
+    gap: 8px;
+  }
+  .stats strong {
+    font-size: 18px;
+  }
+  .steps {
+    gap: 18px;
+  }
+  .brand {
+    font-size: 23px;
+  }
+}
