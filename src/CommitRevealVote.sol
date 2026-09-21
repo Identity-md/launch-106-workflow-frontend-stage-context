@@ -23,6 +23,9 @@ contract CommitRevealVote {
         bool reclaimed;
     }
 
+    uint256 public constant MIN_PHASE_DURATION = 1 hours;
+    uint256 public constant MAX_PROPOSAL_DURATION = 90 days;
+
     IERC20Votes public immutable token;
     uint256 public proposalCount;
     mapping(uint256 proposalId => Proposal) public proposals;
@@ -73,7 +76,11 @@ contract CommitRevealVote {
         external
         returns (uint256 proposalId)
     {
-        if (commitDeadline <= block.timestamp || revealDeadline <= commitDeadline) revert InvalidDeadlines();
+        if (
+            commitDeadline < block.timestamp + MIN_PHASE_DURATION
+                || uint256(revealDeadline) < uint256(commitDeadline) + MIN_PHASE_DURATION
+                || uint256(revealDeadline) > block.timestamp + MAX_PROPOSAL_DURATION
+        ) revert InvalidDeadlines();
         proposalId = ++proposalCount;
         proposals[proposalId] = Proposal(titleHash, commitDeadline, revealDeadline, 0, 0);
         emit ProposalOpened(proposalId, msg.sender, titleHash, commitDeadline, revealDeadline);
@@ -103,7 +110,7 @@ contract CommitRevealVote {
         Ballot storage ballot = ballots[proposalId][msg.sender];
         if (ballot.commitment == bytes32(0)) revert NoCommitment();
         if (ballot.revealed) revert AlreadyRevealed();
-        if (ballot.commitment != keccak256(abi.encode(choice, salt))) revert InvalidReveal();
+        if (ballot.commitment != keccak256(abi.encode(proposalId, msg.sender, choice, salt))) revert InvalidReveal();
 
         ballot.revealed = true;
         if (choice) proposal.forVotes += ballot.amount;

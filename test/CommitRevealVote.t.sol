@@ -41,16 +41,17 @@ contract CommitRevealVoteTest is TestBase {
     }
 
     function testFullVoteAndConservation() public {
-        uint256 id = vote.openProposal(keccak256("title"), uint64(block.timestamp + 10), uint64(block.timestamp + 20));
+        uint256 id =
+            vote.openProposal(keccak256("title"), uint64(block.timestamp + 1 hours), uint64(block.timestamp + 2 hours));
         bytes32 aliceSalt = keccak256("alice salt");
         bytes32 bobSalt = keccak256("bob salt");
         vm.prank(alice);
-        vote.commitVote(id, keccak256(abi.encode(true, aliceSalt)), 60 ether);
+        vote.commitVote(id, keccak256(abi.encode(id, alice, true, aliceSalt)), 60 ether);
         vm.prank(bob);
-        vote.commitVote(id, keccak256(abi.encode(false, bobSalt)), 25 ether);
+        vote.commitVote(id, keccak256(abi.encode(id, bob, false, bobSalt)), 25 ether);
         assertEq(token.balanceOf(address(vote)), 85 ether);
 
-        vm.warp(block.timestamp + 10);
+        vm.warp(block.timestamp + 1 hours);
         vm.prank(alice);
         vote.revealVote(id, true, aliceSalt);
         vm.prank(bob);
@@ -59,7 +60,7 @@ contract CommitRevealVoteTest is TestBase {
         assertEq(forVotes, 60 ether);
         assertEq(againstVotes, 25 ether);
 
-        vm.warp(block.timestamp + 10);
+        vm.warp(block.timestamp + 1 hours);
         vm.prank(alice);
         vote.reclaim(id);
         vm.prank(bob);
@@ -72,8 +73,8 @@ contract CommitRevealVoteTest is TestBase {
     function testUnrevealedVoterCanReclaimWithoutAffectingTotals() public {
         uint256 id = _open();
         vm.prank(alice);
-        vote.commitVote(id, keccak256(abi.encode(true, bytes32("secret"))), 7 ether);
-        vm.warp(block.timestamp + 20);
+        vote.commitVote(id, keccak256(abi.encode(id, alice, true, bytes32("secret"))), 7 ether);
+        vm.warp(block.timestamp + 2 hours);
         vm.prank(alice);
         vote.reclaim(id);
         (,,, uint256 againstVotes, uint256 forVotes) = vote.proposals(id);
@@ -103,7 +104,7 @@ contract CommitRevealVoteTest is TestBase {
         vm.prank(alice);
         vm.expectRevert(CommitRevealVote.AlreadyCommitted.selector);
         vote.commitVote(id, bytes32(uint256(2)), 1 ether);
-        vm.warp(block.timestamp + 10);
+        vm.warp(block.timestamp + 1 hours);
         vm.prank(bob);
         vm.expectRevert(CommitRevealVote.CommitPhaseClosed.selector);
         vote.commitVote(id, bytes32(uint256(2)), 1 ether);
@@ -115,11 +116,11 @@ contract CommitRevealVoteTest is TestBase {
         uint256 id = _open();
         bytes32 salt = bytes32("salt");
         vm.prank(alice);
-        vote.commitVote(id, keccak256(abi.encode(true, salt)), 4 ether);
+        vote.commitVote(id, keccak256(abi.encode(id, alice, true, salt)), 4 ether);
         vm.prank(alice);
         vm.expectRevert(CommitRevealVote.RevealPhaseClosed.selector);
         vote.revealVote(id, true, salt);
-        vm.warp(block.timestamp + 10);
+        vm.warp(block.timestamp + 1 hours);
         vm.prank(alice);
         vm.expectRevert(CommitRevealVote.InvalidReveal.selector);
         vote.revealVote(id, false, salt);
@@ -131,7 +132,7 @@ contract CommitRevealVoteTest is TestBase {
         vm.prank(alice);
         vm.expectRevert(CommitRevealVote.AlreadyRevealed.selector);
         vote.revealVote(id, true, salt);
-        vm.warp(block.timestamp + 10);
+        vm.warp(block.timestamp + 1 hours);
         vm.prank(alice);
         vm.expectRevert(CommitRevealVote.RevealPhaseClosed.selector);
         vote.revealVote(id, true, salt);
@@ -144,7 +145,7 @@ contract CommitRevealVoteTest is TestBase {
         vm.prank(alice);
         vm.expectRevert(CommitRevealVote.TooEarlyToReclaim.selector);
         vote.reclaim(id);
-        vm.warp(block.timestamp + 20);
+        vm.warp(block.timestamp + 2 hours);
         vm.prank(bob);
         vm.expectRevert(CommitRevealVote.NoCommitment.selector);
         vote.reclaim(id);
@@ -163,10 +164,77 @@ contract CommitRevealVoteTest is TestBase {
         vote.commitVote(id, bytes32(uint256(1)), 1 ether);
         (bytes32 commitment,,,) = vote.ballots(id, poor);
         assertTrue(commitment == bytes32(0));
+        token.transfer(poor, 1 ether);
+        vm.prank(poor);
+        token.approve(address(vote), type(uint256).max);
+        vm.prank(poor);
+        vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", uint256(0x11)));
+        vote.commitVote(id, bytes32(uint256(1)), 2 ether);
+        (commitment,,,) = vote.ballots(id, poor);
+        assertTrue(commitment == bytes32(0));
+        assertEq(token.balanceOf(poor), 1 ether);
+        assertEq(token.balanceOf(address(vote)), 0);
+        assertEq(token.allowance(poor, address(vote)), type(uint256).max);
+    }
+
+    function testCopiedCommitmentCannotBeRevealedByAnotherVoterOrProposal() public {
+        uint256 id = _open();
+        uint256 otherId = _open();
+        bytes32 salt = bytes32("shared salt");
+        bytes32 commitment = keccak256(abi.encode(id, alice, true, salt));
+        assertTrue(commitment != keccak256(abi.encode(otherId, alice, true, salt)));
+        vm.prank(alice);
+        vote.commitVote(id, commitment, 60 ether);
+        vm.prank(bob);
+        vote.commitVote(id, commitment, 100 ether);
+        vm.prank(alice);
+        vote.commitVote(otherId, commitment, 40 ether);
+        vm.warp(block.timestamp + 1 hours);
+        vm.prank(alice);
+        vote.revealVote(id, true, salt);
+        vm.prank(bob);
+        vm.expectRevert(CommitRevealVote.InvalidReveal.selector);
+        vote.revealVote(id, true, salt);
+        vm.prank(alice);
+        vm.expectRevert(CommitRevealVote.InvalidReveal.selector);
+        vote.revealVote(otherId, true, salt);
+        (,,, uint256 againstVotes, uint256 forVotes) = vote.proposals(id);
+        assertEq(forVotes, 60 ether);
+        assertEq(againstVotes, 0);
+        vm.warp(block.timestamp + 1 hours);
+        vm.prank(bob);
+        vote.reclaim(id);
+        assertEq(token.balanceOf(bob), 100 ether);
+    }
+
+    function testDeadlineLimitsAndMaximumLockRefund() public {
+        uint256 t = block.timestamp;
+        vm.expectRevert(CommitRevealVote.InvalidDeadlines.selector);
+        vote.openProposal(bytes32(0), uint64(t + 1 hours - 1), uint64(t + 2 hours));
+        vm.expectRevert(CommitRevealVote.InvalidDeadlines.selector);
+        vote.openProposal(bytes32(0), uint64(t + 1 hours), uint64(t + 2 hours - 1));
+        vm.expectRevert(CommitRevealVote.InvalidDeadlines.selector);
+        vote.openProposal(bytes32(0), uint64(t + 1 hours), uint64(t + 90 days + 1));
+        vm.expectRevert(CommitRevealVote.InvalidDeadlines.selector);
+        vote.openProposal(bytes32(0), uint64(t + 1 hours), type(uint64).max);
+        assertEq(vote.proposalCount(), 0);
+        uint256 id = vote.openProposal(bytes32(0), uint64(t + 89 days), uint64(t + 90 days));
+        vm.prank(alice);
+        vote.commitVote(id, bytes32(uint256(1)), 100 ether);
+        assertEq(token.allowance(alice, address(vote)), type(uint256).max);
+        vm.warp(t + 90 days - 1);
+        vm.prank(alice);
+        vm.expectRevert(CommitRevealVote.TooEarlyToReclaim.selector);
+        vote.reclaim(id);
+        vm.warp(t + 90 days);
+        vm.prank(alice);
+        vote.reclaim(id);
+        assertEq(token.balanceOf(alice), 100 ether);
+        assertEq(token.balanceOf(address(vote)), 0);
     }
 
     function _open() private returns (uint256) {
-        return vote.openProposal(bytes32("title"), uint64(block.timestamp + 10), uint64(block.timestamp + 20));
+        return vote.openProposal(bytes32("title"), uint64(block.timestamp + 1 hours), uint64(block.timestamp + 2 hours));
     }
 }
 
@@ -223,7 +291,7 @@ contract MaliciousTokenTest is TestBase {
     function setUp() public {
         token = new AdversarialToken();
         vote = new CommitRevealVote(address(token));
-        id = vote.openProposal(bytes32("x"), uint64(block.timestamp + 10), uint64(block.timestamp + 20));
+        id = vote.openProposal(bytes32("x"), uint64(block.timestamp + 1 hours), uint64(block.timestamp + 2 hours));
         token.setTarget(vote, id);
         token.approve(address(vote), type(uint256).max);
     }
@@ -247,7 +315,7 @@ contract MaliciousTokenTest is TestBase {
 
     function testRejectsReclaimReentrancyAndFalseTransfer() public {
         vote.commitVote(id, bytes32(uint256(1)), 2 ether);
-        vm.warp(block.timestamp + 20);
+        vm.warp(block.timestamp + 2 hours);
         token.configure(true, false);
         vm.expectRevert(CommitRevealVote.Reentrancy.selector);
         vote.reclaim(id);
